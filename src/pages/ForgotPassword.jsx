@@ -1,5 +1,5 @@
 // src/pages/ForgotPassword.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { validateEmail } from '../utils/validation';
@@ -19,15 +19,33 @@ const STATUS_STEPS = [
   'Sending your email…',
 ];
 
-function RenderWakeNotice() {
+// FIX 3: Accept loading as prop so it hides immediately when request finishes
+function RenderWakeNotice({ loading }) {
   const [show, setShow] = useState(false);
+
   useEffect(() => {
+    if (!loading) {
+      setShow(false);
+      return;
+    }
     const t = setTimeout(() => setShow(true), 5000);
     return () => clearTimeout(t);
-  }, []);
+  }, [loading]);
+
   if (!show) return null;
+
   return (
-    <div style={{ background:'rgba(251,191,36,0.07)', border:'1px solid rgba(251,191,36,0.25)', borderRadius:10, padding:'11px 14px', marginBottom:18, fontSize:13, color:'#fbbf24', lineHeight:1.6, animation:'fadeIn 0.4s ease' }}>
+    <div style={{
+      background: 'rgba(251,191,36,0.07)',
+      border: '1px solid rgba(251,191,36,0.25)',
+      borderRadius: 10,
+      padding: '11px 14px',
+      marginBottom: 18,
+      fontSize: 13,
+      color: '#fbbf24',
+      lineHeight: 1.6,
+      animation: 'fadeIn 0.4s ease'
+    }}>
       ⏳ <strong>Free server is waking up.</strong> This can take up to 60 seconds on first request. Please don't close the page.
     </div>
   );
@@ -44,27 +62,34 @@ export default function ForgotPassword() {
   const [loading, setLoading]       = useState(false);
   const [statusMsg, setStatusMsg]   = useState('');
 
+  // FIX 2: Use a ref to track the interval so multiple submits don't stack
+  const intervalRef = useRef(null);
+
   const handleSubmit = async () => {
     setFieldError(''); setApiError(''); setSuccess(''); setStatusMsg('');
+
     const err = validateEmail(email);
     if (err) return setFieldError(err);
 
     setLoading(true);
     setStatusMsg(STATUS_STEPS[0]);
 
+    // FIX 2: Clear any existing interval before starting a new one
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
     let step = 0;
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       step = Math.min(step + 1, STATUS_STEPS.length - 1);
       setStatusMsg(STATUS_STEPS[step]);
     }, 8000);
 
     try {
       const data = await forgotPassword(email.trim());
-      clearInterval(interval);
+      clearInterval(intervalRef.current);
       setStatusMsg('');
       setSuccess(data.message || 'Reset link sent! Check your inbox.');
     } catch (e) {
-      clearInterval(interval);
+      clearInterval(intervalRef.current);
       setStatusMsg('');
       if (
         e.message?.toLowerCase().includes('timeout') ||
@@ -92,17 +117,28 @@ export default function ForgotPassword() {
       <Alert type="success" message={success} />
 
       {loading && statusMsg && (
-        <div style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(99,102,241,0.08)', border:'1px solid rgba(99,102,241,0.2)', borderRadius:10, padding:'11px 14px', marginBottom:18, fontSize:13.5, color:'#818cf8' }}>
-          <div style={{ display:'flex', gap:3, flexShrink:0 }}>
-            {[0,1,2].map(i => (
-              <div key={i} style={{ width:5, height:5, borderRadius:'50%', background:'#6366f1', animation:`dotPulse 1.2s ease-in-out ${i*0.2}s infinite` }} />
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          background: 'rgba(99,102,241,0.08)',
+          border: '1px solid rgba(99,102,241,0.2)',
+          borderRadius: 10, padding: '11px 14px',
+          marginBottom: 18, fontSize: 13.5, color: '#818cf8'
+        }}>
+          <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+            {[0, 1, 2].map(i => (
+              <div key={i} style={{
+                width: 5, height: 5, borderRadius: '50%',
+                background: '#6366f1',
+                animation: `dotPulse 1.2s ease-in-out ${i * 0.2}s infinite`
+              }} />
             ))}
           </div>
           {statusMsg}
         </div>
       )}
 
-      {loading && <RenderWakeNotice />}
+      {/* FIX 3: Pass loading prop so notice hides when request finishes */}
+      {loading && <RenderWakeNotice loading={loading} />}
 
       {!success && (
         <>
@@ -126,14 +162,21 @@ export default function ForgotPassword() {
 
       {success && (
         <>
-          <div style={{ textAlign:'center', padding:'8px 0 20px' }}>
-            <div style={{ width:64, height:64, background:'rgba(52,211,153,0.08)', border:'1px solid rgba(52,211,153,0.25)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
+          <div style={{ textAlign: 'center', padding: '8px 0 20px' }}>
+            <div style={{
+              width: 64, height: 64,
+              background: 'rgba(52,211,153,0.08)',
+              border: '1px solid rgba(52,211,153,0.25)',
+              borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 16px'
+            }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
                 <polyline points="22 4 12 14.01 9 11.01"/>
               </svg>
             </div>
-            <p style={{ color:'var(--text-2)', fontSize:13, lineHeight:1.7 }}>
+            <p style={{ color: 'var(--text-2)', fontSize: 13, lineHeight: 1.7 }}>
               Check your spam folder too if you don't see it within a minute.
             </p>
           </div>
@@ -141,9 +184,15 @@ export default function ForgotPassword() {
         </>
       )}
 
-      {!success && !loading && (
-        <div style={{ textAlign:'center', marginTop:20 }}>
-          <LinkButton onClick={() => navigate('/login')}>← Back to sign in</LinkButton>
+      {/* FIX 1: Show back link during loading too — just disable it */}
+      {!success && (
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <LinkButton
+            onClick={() => !loading && navigate('/login')}
+            style={{ opacity: loading ? 0.5 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
+          >
+            ← Back to sign in
+          </LinkButton>
         </div>
       )}
 
@@ -151,6 +200,10 @@ export default function ForgotPassword() {
         @keyframes dotPulse {
           0%, 100% { opacity: 0.3; transform: scale(0.8); }
           50%       { opacity: 1;   transform: scale(1.2); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-4px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </Card>
