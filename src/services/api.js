@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://auth-backend-m2zb.onrender.com',
+  baseURL: process.env.REACT_APP_API_URL || 'https://auth-backend-m2zb.onrender.com/api',
   timeout: 60000, // 60s — Render free tier can take 30-60s to wake up
   headers: { 'Content-Type': 'application/json' },
 });
@@ -33,7 +33,7 @@ api.interceptors.response.use(
 export const authAPI = {
   register:       (data)             => api.post('/auth/register', data),
   login:          (data)             => api.post('/auth/login', data),
-  forgotPassword: (email)            => api.post('/auth/forgot-password', { email }),
+  forgotPassword: (email)            => api.post('api/auth/forgot-password', { email }),
   resetPassword:  (token, password)  => api.post(`/auth/reset-password/${token}`, { password }),
 };
 
