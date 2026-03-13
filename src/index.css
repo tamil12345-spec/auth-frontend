@@ -1,0 +1,59 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:           #07090e;
+  --surface:      #0d1017;
+  --surface-2:    #131720;
+  --border:       rgba(255,255,255,0.07);
+  --accent:       #6366f1;
+  --accent-2:     #8b5cf6;
+  --accent-glow:  rgba(99,102,241,0.25);
+  --text:         #dde1eb;
+  --text-2:       #8891a4;
+  --text-3:       #4b5465;
+  --success:      #34d399;
+  --error:        #f87171;
+  --warning:      #fbbf24;
+  --font-display: 'Syne', sans-serif;
+  --font-body:    'Instrument Sans', sans-serif;
+  --radius:       14px;
+  --radius-sm:    10px;
+  --shadow:       0 32px 80px rgba(0,0,0,0.6);
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(28px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes drawCheck {
+  from { stroke-dashoffset: 80; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes scaleIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+@keyframes orb1 {
+  0%,100% { transform: translate(0,0); }
+  50%     { transform: translate(30px,-20px); }
+}
+@keyframes orb2 {
+  0%,100% { transform: translate(0,0); }
+  50%     { transform: translate(-25px,18px); }
+}
