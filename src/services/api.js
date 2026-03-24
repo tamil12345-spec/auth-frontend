@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://https://strong-bonbon-2772bc.netlify.app/api',
+  baseURL: process.env.REACT_APP_API_URL || 'https://strong-bonbon-2772bc.netlify.app/api',
   timeout: 60000, // 60s — Render free tier can take 30-60s to wake up
   headers: { 'Content-Type': 'application/json' },
 });
