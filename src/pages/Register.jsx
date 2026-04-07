@@ -1,86 +1,130 @@
 // src/pages/Register.jsx
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { validateName, validateEmail, validatePassword, validateConfirmPassword } from '../utils/validation';
-import { Card, IconBadge, PageTitle, Input, PasswordInput, StrengthMeter, Button, Alert, Divider, LinkButton } from '../components/UI';
-
-const UserPlusIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/>
-    <circle cx="9" cy="7" r="4"/>
-    <line x1="19" y1="8" x2="19" y2="14"/>
-    <line x1="22" y1="11" x2="16" y2="11"/>
-  </svg>
-);
 
 export default function Register() {
-  const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register }    = useAuth();
+  const navigate        = useNavigate();
+  const [name,     setName]     = useState('');
+  const [email,    setEmail]    = useState('');
+  const [password, setPassword] = useState('');
+  const [error,    setError]    = useState('');
+  const [loading,  setLoading]  = useState(false);
 
-  const [form, setForm] = useState({ name:'', email:'', password:'', confirm:'' });
-  const [errors, setErrors] = useState({});
-  const [apiError, setApiError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
 
-  const setField = (key, val) => {
-    setForm(p => ({ ...p, [key]: val }));
-    setErrors(p => ({ ...p, [key]: null }));
-    setApiError('');
-  };
-
-  const handleSubmit = async () => {
-    const errs = {};
-    const nameErr    = validateName(form.name);
-    const emailErr   = validateEmail(form.email);
-    const pwErr      = validatePassword(form.password);
-    const matchErr   = validateConfirmPassword(form.password, form.confirm);
-    if (nameErr)  errs.name    = nameErr;
-    if (emailErr) errs.email   = emailErr;
-    if (pwErr)    errs.password = pwErr;
-    if (matchErr) errs.confirm  = matchErr;
-    if (Object.keys(errs).length) return setErrors(errs);
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
 
     setLoading(true);
     try {
-      await register(form.name, form.email, form.password);
-      navigate('/dashboard');
-    } catch (e) {
-      setApiError(e.message);
+      await register(name, email, password);
+      navigate('/dashboard');          // ← redirect on success
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Card>
-      <IconBadge><UserPlusIcon /></IconBadge>
-      <PageTitle title="Create account" subtitle="Join us today — it's completely free." />
+    <div style={styles.wrapper}>
+      <div style={styles.card}>
+        <h2 style={styles.title}>Create Account</h2>
 
-      <Alert type="error" message={apiError} />
+        {error && <div style={styles.errorBox}>{error}</div>}
 
-      <Input id="name" label="Full name" value={form.name} onChange={v => setField('name', v)}
-        placeholder="Your name" error={errors.name} autoComplete="name" autoFocus />
+        <form onSubmit={handleSubmit}>
+          <div style={styles.field}>
+            <label style={styles.label}>Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={styles.input}
+              placeholder="Your name"
+              required
+            />
+          </div>
 
-      <Input id="email" label="Email address" type="email" value={form.email} onChange={v => setField('email', v)}
-        onKeyDown={e => e.key === 'Enter' && document.getElementById('reg-pw').focus()}
-        placeholder="you@example.com" error={errors.email} autoComplete="email" />
+          <div style={styles.field}>
+            <label style={styles.label}>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={styles.input}
+              placeholder="you@example.com"
+              required
+            />
+          </div>
 
-      <PasswordInput id="reg-pw" label="Password" value={form.password} onChange={v => setField('password', v)}
-        onKeyDown={e => e.key === 'Enter' && document.getElementById('confirm-pw').focus()}
-        placeholder="Min. 8 characters" error={errors.password} autoComplete="new-password" />
-      <StrengthMeter password={form.password} />
+          <div style={styles.field}>
+            <label style={styles.label}>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={styles.input}
+              placeholder="Min. 8 characters"
+              required
+            />
+          </div>
 
-      <PasswordInput id="confirm-pw" label="Confirm password" value={form.confirm} onChange={v => setField('confirm', v)}
-        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-        placeholder="Repeat password" error={errors.confirm} autoComplete="new-password" />
+          <button type="submit" style={styles.btn} disabled={loading}>
+            {loading ? 'Creating account…' : 'Create Account'}
+          </button>
+        </form>
 
-      <Button onClick={handleSubmit} loading={loading}>Create account</Button>
-
-      <Divider text="already have an account?" />
-      <div style={{ textAlign:'center' }}>
-        <LinkButton onClick={() => navigate('/login')}>Sign in instead</LinkButton>
+        <p style={styles.footer}>
+          Already have an account?{' '}
+          <Link to="/login" style={styles.link}>Sign in</Link>
+        </p>
       </div>
-    </Card>
+    </div>
   );
 }
+
+// ── Styles ────────────────────────────────────────────────────
+const styles = {
+  wrapper: {
+    minHeight: '100vh', display: 'flex',
+    alignItems: 'center', justifyContent: 'center',
+    background: '#0d1017',
+  },
+  card: {
+    background: '#1a1f2e', borderRadius: 16, padding: '40px 36px',
+    width: '100%', maxWidth: 420, boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+  },
+  title: {
+    margin: '0 0 28px', fontSize: 24, fontWeight: 700,
+    color: '#fff', fontFamily: 'Segoe UI, sans-serif',
+  },
+  errorBox: {
+    background: '#2d1f1f', border: '1px solid #f87171',
+    color: '#f87171', borderRadius: 8, padding: '10px 14px',
+    marginBottom: 20, fontSize: 14, fontFamily: 'Segoe UI, sans-serif',
+  },
+  field:  { marginBottom: 18 },
+  label:  { display: 'block', marginBottom: 6, fontSize: 13, color: '#8891a4', fontFamily: 'Segoe UI, sans-serif' },
+  input:  {
+    width: '100%', padding: '10px 14px', borderRadius: 8,
+    background: '#0d1017', border: '1px solid #2d3348',
+    color: '#dde1eb', fontSize: 14, outline: 'none',
+    fontFamily: 'Segoe UI, sans-serif', boxSizing: 'border-box',
+  },
+  btn: {
+    width: '100%', padding: '12px', borderRadius: 8, border: 'none',
+    background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+    color: '#fff', fontSize: 15, fontWeight: 600,
+    cursor: 'pointer', fontFamily: 'Segoe UI, sans-serif',
+    marginTop: 8,
+  },
+  link:   { color: '#6366f1', textDecoration: 'none', fontSize: 13 },
+  footer: { marginTop: 24, textAlign: 'center', fontSize: 13, color: '#8891a4', fontFamily: 'Segoe UI, sans-serif' },
+};
