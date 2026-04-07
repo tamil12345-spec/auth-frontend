@@ -6,9 +6,8 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user,    setUser]    = useState(null);
-  const [loading, setLoading] = useState(true); // checking stored token on mount
+  const [loading, setLoading] = useState(true);
 
-  // ── Restore session from localStorage ────────────────────
   useEffect(() => {
     const token    = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -18,44 +17,59 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  // ── Register ──────────────────────────────────────────────
   const register = useCallback(async (name, email, password) => {
-    const { data } = await authAPI.register({ name, email, password });
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user',  JSON.stringify(data.user));
-    setUser(data.user);
-    return data;
+    try {
+      const { data } = await authAPI.register({ name, email, password });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user',  JSON.stringify(data.user));
+      setUser(data.user);
+      return data;
+    } catch (err) {
+      console.error('❌ Register failed:', err.message);
+      throw err; // re-throw so Register.jsx catch block handles it
+    }
   }, []);
 
-  // ── Login ─────────────────────────────────────────────────
   const login = useCallback(async (email, password) => {
-    const { data } = await authAPI.login({ email, password });
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user',  JSON.stringify(data.user));
-    setUser(data.user);
-    return data;
+    try {
+      const { data } = await authAPI.login({ email, password });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user',  JSON.stringify(data.user));
+      setUser(data.user);
+      return data;
+    } catch (err) {
+      console.error('❌ Login failed:', err.message);
+      throw err; // re-throw so Login.jsx catch block handles it
+    }
   }, []);
 
-  // ── Logout ────────────────────────────────────────────────
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
   }, []);
 
-  // ── Forgot password ───────────────────────────────────────
   const forgotPassword = useCallback(async (email) => {
-    const { data } = await authAPI.forgotPassword(email);
-    return data;
+    try {
+      const { data } = await authAPI.forgotPassword(email);
+      return data;
+    } catch (err) {
+      console.error('❌ Forgot password failed:', err.message);
+      throw err;
+    }
   }, []);
 
-  // ── Reset password ────────────────────────────────────────
   const resetPassword = useCallback(async (token, password) => {
-    const { data } = await authAPI.resetPassword(token, password);
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user',  JSON.stringify(data.user));
-    setUser(data.user);
-    return data;
+    try {
+      const { data } = await authAPI.resetPassword(token, password);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user',  JSON.stringify(data.user));
+      setUser(data.user);
+      return data;
+    } catch (err) {
+      console.error('❌ Reset password failed:', err.message);
+      throw err;
+    }
   }, []);
 
   return (
