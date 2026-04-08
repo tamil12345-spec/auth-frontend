@@ -54,7 +54,7 @@ export default function App() {
           <Route path="/login"            element={<PublicRoute><AuthLayout><Login /></AuthLayout></PublicRoute>} />
           <Route path="/register"         element={<PublicRoute><AuthLayout><Register /></AuthLayout></PublicRoute>} />
           <Route path="/forgot-password"  element={<PublicRoute><AuthLayout><ForgotPassword /></AuthLayout></PublicRoute>} />
-          <Route path="/reset-password/:token" element={<AuthLayout><ResetPassword /></AuthLayout>} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Protected routes */}
           <Route path="/dashboard"        element={<PrivateRoute><Dashboard /></PrivateRoute>} />
